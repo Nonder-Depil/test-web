@@ -56,6 +56,9 @@
       var openTimer = null, closeTimer = null, current = null, pending = null;
 
       function closeNow() {
+        /* the visual editor pins a menu open (window.__tgNavPin, set by
+           bridge.js on click) - hover-intent must not close it */
+        if (window.__tgNavPin) return;
         clearTimeout(openTimer);
         clearTimeout(closeTimer);
         pending = null;
