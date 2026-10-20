@@ -1,0 +1,2 @@
+--- blog.html Home group ---
+<span class="i18n i18n-en">Home</span><span class="i18n i18n-zh">首页</span><span class="i18n i18n-es">Inicio</span><span class="i18n i18n-fr">Accueil</span><span class="i18n i18n-de">Home</span><span class="i18n i18n-it">Home</span><span class="i18n i18n-ja">ホーム</span><span class="i18n i18n-ko">홈</sp
