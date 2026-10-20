@@ -56,6 +56,8 @@
     'Blog': { fr: 'Blog', de: 'Blog', it: 'Blog', ja: 'ブログ', ko: '블로그', ar: 'المدونة' },
     'Contact': { fr: 'Contact', de: 'Kontakt', it: 'Contatti', ja: 'お問い合わせ', ko: '문의', ar: 'اتصل بنا' },
     'Tel / WhatsApp': { fr: 'Tél / WhatsApp', de: 'Tel / WhatsApp', it: 'Tel / WhatsApp', ja: '電話 / WhatsApp', ko: '전화 / WhatsApp', ar: 'هاتف / واتساب' },
+    'Email': { fr: 'E-mail', de: 'E-Mail', it: 'Email', ja: 'メール', ko: '이메일', ar: 'البريد الإلكتروني', zh: '邮箱', es: 'Correo' },
+    'Fax': { fr: 'Fax', de: 'Fax', it: 'Fax', ja: 'ファックス', ko: '팩스', ar: 'فاكس', zh: '传真', es: 'Fax' },
     'Working hours': { fr: 'Heures d\'ouverture', de: 'Öffnungszeiten', it: 'Orari', ja: '営業時間', ko: '근무 시간', ar: 'ساعات العمل' },
     'Mon - Sat, 9:00 - 18:00 (GMT+8)': { fr: 'Lun - Sam, 9h00 - 18h00 (GMT+8)', de: 'Mo - Sa, 9:00 - 18:00 (GMT+8)', it: 'Lun - Sab, 9:00 - 18:00 (GMT+8)', ja: '月〜土 9:00 - 18:00 (GMT+8)', ko: '월-토, 9:00 - 18:00 (GMT+8)', ar: 'السبت - الاثنين، 9:00 - 18:00 (GMT+8)' },
     'All rights reserved.': { fr: 'Tous droits réservés.', de: 'Alle Rechte vorbehalten.', it: 'Tutti i diritti riservati.', ja: 'すべての権利を保有。', ko: '모든 권리 보유.', ar: 'جميع الحقوق محفوظة.' },
@@ -153,9 +155,63 @@
       '<span class="i18n i18n-ar">' + ar + '</span>';
   }
 
+  /* Editor-managed copy overrides: TGSite.copy is [{k:<english source>,
+     v:{en..ar}}]. A key wins over the built-in DICT for every language it
+     provides; unfilled languages keep the original wording. */
+  function COPYM() {
+    var c = SG().copy, m = {};
+    if (c && c.length) {
+      for (var i = 0; i < c.length; i++) {
+        if (c[i] && c[i].k) m[c[i].k] = c[i].v || {};
+      }
+    }
+    return m;
+  }
+
   function T(en, zh, es) {
+    var ov = COPYM()[en];
+    if (ov) {
+      var dd = DICT[en] || {};
+      function g(k, fb) { return ov[k] || dd[k] || fb; }
+      return T9(g('en', en), g('zh', zh), g('es', es), g('fr'), g('de'),
+                g('it'), g('ja'), g('ko'), g('ar'));
+    }
     var d = DICT[en] || {};
     return T9(en, d.zh || zh, d.es || es, d.fr, d.de, d.it, d.ja, d.ko, d.ar);
+  }
+
+  /* ---- editor-managed company data (assets/js/site-data.js) ----
+     The visual editor's 公司信息 panel writes that file; every field it
+     defines overrides the hard-coded default below. When the file is
+     missing (or fails to load) the footer renders exactly as before. */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function SG() { return window.TGSite || {}; }
+
+  function t9o(o, fb) {
+    if (typeof o === 'string') {      // legacy plain-string site-data value
+      var s = o; o = {};
+      ['en', 'zh', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'ar']
+        .forEach(function (k) { o[k] = s; });
+    }
+    o = o || {};
+    function g(k) { return esc(o[k] || fb); }   // escaped: t9o feeds raw HTML
+    return T9(g('en'), g('zh'), g('es'), g('fr'), g('de'), g('it'), g('ja'), g('ko'), g('ar'));
+  }
+
+  /* truthy only when the t9 object carries at least one non-empty language.
+     An all-blank object (the editor saves those before any field is filled)
+     must fall back to the built-in default, not render 'undefined'. A plain
+     string value (older site-data.js) counts as set. */
+  function nz9(o) {
+    if (!o) return null;
+    if (typeof o === 'string') return o;
+    for (var k in o) { if (o[k]) return o; }
+    return null;
   }
 
   /* product catalogue: names stay in English (industry terms) */
@@ -301,35 +357,46 @@
     var cols = key === 'products' ? MENU.products : [MENU[key]];
     var isTiered = cols.length > 1;
 
-    var footText, footHref, footLabel;
+    var footText, footHref, footLabel, footKey, btnKey;
     if (key === 'products') {
-      footText = T('Not sure which craft fits your project? Send us your artwork.',
+      footKey = 'Not sure which craft fits your project? Send us your artwork.';
+      btnKey = 'Get a Quote';
+      footText = T(footKey,
         '不确定哪种工艺适合你的项目？把设计稿发给我们。',
         '¿No sabes qué técnica encaja? Envíanos tu diseño.');
       footHref = 'contact.html';
-      footLabel = T('Get a Quote', '获取报价', 'Pedir presupuesto');
+      footLabel = T(btnKey, '获取报价', 'Pedir presupuesto');
     } else if (key === 'medal') {
-      footText = T('Marathon, school, military and corporate award medals.',
+      footKey = 'Marathon, school, military and corporate award medals.';
+      btnKey = 'Explore Medals';
+      footText = T(footKey,
         '马拉松、学校、军队与企业颁奖奖牌。',
         'Medallas para maratones, escuelas, fuerzas armadas y empresas.');
       footHref = 'product.html?slug=metal-medals';
-      footLabel = T('Explore Medals', '查看奖牌', 'Ver medallas');
+      footLabel = T(btnKey, '查看奖牌', 'Ver medallas');
     } else if (key === 'company') {
-      footText = T('Established in 1984, serving customers on five continents.',
+      footKey = 'Established in 1984, serving customers on five continents.';
+      btnKey = 'Learn More';
+      footText = T(footKey,
         '创立于 1984 年，服务五大洲客户。',
         'Fundada en 1984, atendemos clientes en cinco continentes.');
       footHref = 'company.html';
-      footLabel = T('Learn More', '了解更多', 'Saber más');
+      footLabel = T(btnKey, '了解更多', 'Saber más');
     } else {
-      footText = T('From artwork to delivery, one team follows your order.',
+      footKey = 'From artwork to delivery, one team follows your order.';
+      btnKey = 'See Process';
+      footText = T(footKey,
         '从设计稿到交付，一个团队跟到底。',
         'Del diseño a la entrega, un solo equipo.');
       footHref = 'customization-process.html';
-      footLabel = T('See Process', '查看流程', 'Ver proceso');
+      footLabel = T(btnKey, '查看流程', 'Ver proceso');
     }
 
-    var foot = '<div class="mega__foot"><p>' + footText + '</p>' +
-      '<a class="btn btn--primary btn--sm" href="' + footHref + '">' + footLabel + '</a></div>';
+    /* data-k = the English source string = the editor's copy key, so the
+       visual editor can offer each dropdown line as its own text piece */
+    function dk(k) { return ' data-k="' + esc(k) + '"'; }
+    var foot = '<div class="mega__foot"><p' + dk(footKey) + '>' + footText + '</p>' +
+      '<a class="btn btn--primary btn--sm" href="' + footHref + '"' + dk(btnKey) + '>' + footLabel + '</a></div>';
 
     if (isTiered) {
       var cats = '';
@@ -338,13 +405,13 @@
         var title = T(col.h[0], col.h[1], col.h[2]);
         var list = '';
         col.items.forEach(function (it) {
-          list += '<li><a href="' + it[1] + '">' + T(it[0], it[0], it[0]) + '</a></li>';
+          list += '<li><a href="' + it[1] + '"' + dk(it[0]) + '>' + T(it[0], it[0], it[0]) + '</a></li>';
         });
-        cats += '<li class="mega__cat' + (i === 0 ? ' is-active' : '') + '" data-cat="' + i + '">' + title + '</li>';
+        cats += '<li class="mega__cat' + (i === 0 ? ' is-active' : '') + '" data-cat="' + i + '"' + dk(col.h[0]) + '>' + title + '</li>';
         panes += '<div class="mega__pane' + (i === 0 ? ' is-active' : '') + '" data-pane="' + i + '">' +
-          '<div class="mega__pane-head">' + title + '</div>' +
+          '<div class="mega__pane-head"' + dk(col.h[0]) + '>' + title + '</div>' +
           '<ul class="mega__pane-list">' + list + '</ul>' +
-          '<a class="mega__pane-all" href="' + col.items[0][1].split('#')[0] + '">' +
+          '<a class="mega__pane-all" href="' + col.items[0][1].split('#')[0] + '"' + dk('View all in ') + '>' +
           T('View all in ', '查看全部', 'Ver todo en ') + title + '</a></div>';
       });
       return '<div class="mega mega--tiered">' +
@@ -358,30 +425,43 @@
     var title = T(col.h[0], col.h[1], col.h[2]);
     var list = '';
     col.items.forEach(function (it) {
-      list += '<li><a href="' + it[1] + '">' + T(it[0], it[0], it[0]) + '</a></li>';
+      list += '<li><a href="' + it[1] + '"' + dk(it[0]) + '>' + T(it[0], it[0], it[0]) + '</a></li>';
     });
     return '<div class="mega mega--simple">' +
-      '<div class="mega__simple-head">' + title + '</div>' +
+      '<div class="mega__simple-head"' + dk(col.h[0]) + '>' + title + '</div>' +
       '<ul class="mega__simple-list">' + list + '</ul>' + foot + '</div>';
   }
 
-  /* label order: en, zh, es, fr, de, it, ja, ko, ar */
+  /* label order: en, zh, es, fr, de, it, ja, ko, ar.
+     ck = editor-managed copy key (TGSite.copy) - the visual editor's
+     导航 panel writes overrides there; without one the array renders. */
   var NAV = [
-    { href: 'index.html', label: ['Home', '首页', 'Inicio', 'Accueil', 'Startseite', 'Home', 'ホーム', '홈', 'الرئيسية'] },
-    { href: 'products.html', label: ['Products', '产品中心', 'Productos', 'Produits', 'Produkte', 'Prodotti', '製品', '제품', 'المنتجات'], key: 'products' },
-    { href: 'product.html?slug=metal-medals', label: ['Custom Medal', '定制奖牌', 'Medallas', 'Médailles sur mesure', 'Individuelle Medaillen', 'Medaglie personalizzate', 'カスタムメダル', '커스텀 메달', 'ميداليات مخصصة'], key: 'medal' },
-    { href: 'company.html', label: ['Company', '关于我们', 'Empresa', 'Entreprise', 'Unternehmen', 'Azienda', '会社概要', '회사 소개', 'الشركة'], key: 'company' },
-    { href: 'services.html', label: ['Services', '服务支持', 'Servicios', 'Services', 'Leistungen', 'Servizi', 'サービス', '서비스', 'الخدمات'], key: 'services' },
-    { href: 'blog.html', label: ['Blog', '博客', 'Blog', 'Blog', 'Blog', 'Blog', 'ブログ', '블로그', 'المدونة'] },
-    { href: 'contact.html', label: ['Contact', '联系我们', 'Contacto', 'Contact', 'Kontakt', 'Contatti', 'お問い合わせ', '문의', 'اتصل بنا'] }
+    { href: 'index.html', ck: 'Nav Home', label: ['Home', '首页', 'Inicio', 'Accueil', 'Startseite', 'Home', 'ホーム', '홈', 'الرئيسية'] },
+    { href: 'products.html', ck: 'Nav Products', label: ['Products', '产品中心', 'Productos', 'Produits', 'Produkte', 'Prodotti', '製品', '제품', 'المنتجات'], key: 'products' },
+    { href: 'product.html?slug=metal-medals', ck: 'Nav Custom Medal', label: ['Custom Medal', '定制奖牌', 'Medallas', 'Médailles sur mesure', 'Individuelle Medaillen', 'Medaglie personalizzate', 'カスタムメダル', '커스텀 메달', 'ميداليات مخصصة'], key: 'medal' },
+    { href: 'company.html', ck: 'Nav Company', label: ['Company', '关于我们', 'Empresa', 'Entreprise', 'Unternehmen', 'Azienda', '会社概要', '회사 소개', 'الشركة'], key: 'company' },
+    { href: 'services.html', ck: 'Nav Services', label: ['Services', '服务支持', 'Servicios', 'Services', 'Leistungen', 'Servizi', 'サービス', '서비스', 'الخدمات'], key: 'services' },
+    { href: 'blog.html', ck: 'Nav Blog', label: ['Blog', '博客', 'Blog', 'Blog', 'Blog', 'Blog', 'ブログ', '블로그', 'المدونة'] },
+    { href: 'contact.html', ck: 'Nav Contact', label: ['Contact', '联系我们', 'Contacto', 'Contact', 'Kontakt', 'Contatti', 'お問い合わせ', '문의', 'اتصل بنا'] }
   ];
+
+  /* nav labels: like T() but the fallback is a 9-language array instead of
+     DICT, so the editor can override each language independently */
+  function T9K(key, lab) {
+    var ov = COPYM()[key];
+    if (!ov) return T9.apply(null, lab);
+    var out = [];
+    var L = ['en', 'zh', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'ar'];
+    for (var i = 0; i < 9; i++) out.push(ov[L[i]] || lab[i] || '');
+    return T9.apply(null, out);
+  }
 
   function navHtml() {
     var html = '';
     NAV.forEach(function (n) {
       var hasMega = !!n.key;
       html += '<div class="nav__item' + (hasMega ? ' has-mega' : '') + '">' +
-        '<a class="nav__link" href="' + n.href + '">' + T9.apply(null, n.label) +
+        '<a class="nav__link" href="' + n.href + '">' + T9K(n.ck, n.label) +
         (hasMega ? CHEV : '') + '</a>' +
         (hasMega ? megaFor(n.key) : '') + '</div>';
     });
@@ -392,7 +472,7 @@
     var html = '';
     NAV.forEach(function (n) {
       html += '<div class="drawer__group' + (n.key ? '' : ' is-static') + '">';
-      html += '<a class="drawer__top" href="' + n.href + '">' + T9.apply(null, n.label) +
+      html += '<a class="drawer__top" href="' + n.href + '">' + T9K(n.ck, n.label) +
         (n.key ? CHEV : '') + '</a>';
       if (n.key) {
         html += '<div class="drawer__sub">';
@@ -455,8 +535,8 @@
       '<li><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>' +
       T('40+ years manufacturing', '40 余年制造经验', 'Más de 40 años fabricando') + '</span></li>' +
       '</ul><div class="topbar__right">' +
-      '<a href="mailto:sales@triumphgifts.com">sales@triumphgifts.com</a>' +
-      '<span style="opacity:.4">|</span><a href="tel:+8613650325891">+86-136 5032 5891</a>' +
+      '<a href="mailto:' + esc(SG().email || 'sales@triumphgifts.com') + '">' + esc(SG().email || 'sales@triumphgifts.com') + '</a>' +
+      '<span style="opacity:.4">|</span><a href="tel:' + esc(SG().tel || '+8613650325891') + '">' + esc(SG().tel || '+86-136 5032 5891') + '</a>' +
       '</div></div></div>';
 
     var head =
@@ -518,19 +598,20 @@
       '</ul></div>' +
 
       '<div><h5>' + T('Contact', '联系我们', 'Contacto') + '</h5><ul class="info-list">' +
-      '<li class="info-item"><span class="ic">' + SVG_PIN + '</span><div><b>Triumph Gifts Co., Ltd.</b><span>' +
-      T('Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', '中国广州市海珠区海洲路18号TCL广场505室，邮编510335', 'Sala 505, TCL Plaza, 18 Haizhou Road, Haizhu, Guangzhou 510335, China') + '</span></div></li>' +
-      '<li class="info-item"><span class="ic">' + SVG_MAIL + '</span><div><b>' + T('Email', '邮箱', 'Correo') + '</b><a href="mailto:sales@triumphgifts.com">sales@triumphgifts.com</a></div></li>' +
-      '<li class="info-item"><span class="ic">' + SVG_TEL + '</span><div><b>' + T('Tel / WhatsApp', '电话', 'Tel / WhatsApp') + '</b><a href="tel:+8613650325891">+86-136 5032 5891</a></div></li>' +
-      '<li class="info-item"><span class="ic">' + SVG_TEL + '</span><div><b>' + T('Fax', '传真', 'Fax') + '</b><a href="tel:+862080928520">+86-20-8092 8520</a></div></li>' +
+      '<li class="info-item"><span class="ic">' + SVG_PIN + '</span><div><b>' + t9o(SG().name, 'Triumph Gifts Co., Ltd.') + '</b><span>' +
+      t9o(SG().address, 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China') + '</span></div></li>' +
+      '<li class="info-item"><span class="ic">' + SVG_MAIL + '</span><div><b>' + T('Email', '邮箱', 'Correo') + '</b><a href="mailto:' + esc(SG().email || 'sales@triumphgifts.com') + '">' + esc(SG().email || 'sales@triumphgifts.com') + '</a></div></li>' +
+      '<li class="info-item"><span class="ic">' + SVG_TEL + '</span><div><b>' + T('Tel / WhatsApp', '电话', 'Tel / WhatsApp') + '</b><a href="tel:' + esc(SG().tel || '+8613650325891') + '">' + esc(SG().tel || '+86-136 5032 5891') + '</a></div></li>' +
+      '<li class="info-item"><span class="ic">' + SVG_TEL + '</span><div><b>' + T('Fax', '传真', 'Fax') + '</b><a href="tel:' + esc(SG().fax || '+862080928520') + '">' + esc(SG().fax || '+86-20-8092 8520') + '</a></div></li>' +
       '<li class="info-item"><span class="ic">' + SVG_CLOCK + '</span><div><b>' + T('Working hours', '工作时间', 'Horario') + '</b><span>' +
-      T('Mon - Sat, 9:00 - 18:00 (GMT+8)', '周一至周六 9:00 - 18:00', 'Lun - Sáb, 9:00 - 18:00') + '</span></div></li>' +
+      t9o(SG().hours, 'Mon - Sat, 9:00 - 18:00 (GMT+8)') + '</span></div></li>' +
       '</ul></div>' +
       '</div>' +
 
-      '<div class="footer__bottom"><span>&copy; 1984-2026 Triumph Gifts. ' +
-      T('All rights reserved.', '保留所有权利。', 'Todos los derechos reservados.') + '</span>' +
-      '<span>' + T('Demo replica - no external services connected.', '演示复刻站 - 未连接任何外部服务。', 'Réplica de demostración - sin servicios externos.') + '</span>' +
+      '<div class="footer__bottom"><span>&copy; ' + esc(SG().year || '1984-2026') + ' ' +
+      t9o(SG().name, 'Triumph Gifts') + '. ' +
+      (nz9(SG().legal) ? t9o(SG().legal) : T('All rights reserved.', '保留所有权利。', 'Todos los derechos reservados.')) + '</span>' +
+      '<span>' + (nz9(SG().note) ? t9o(SG().note) : T('Demo replica - no external services connected.', '演示复刻站 - 未连接任何外部服务。', 'Réplica de demostración - sin servicios externos.')) + '</span>' +
       '</div></div></footer>';
 
     var toTop = '<button class="to-top" type="button" data-to-top aria-label="Back to top">' +
@@ -549,9 +630,24 @@
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', render);
+  function bootLayout() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', render);
+    } else {
+      render();
+    }
+  }
+
+  /* The editor's company data must be in place BEFORE the footer renders.
+     Load it up front; a missing file (404) simply falls through to the
+     hard-coded defaults, so nothing breaks without it. */
+  if (window.TGSite) {
+    bootLayout();
   } else {
-    render();
+    var tgsScript = document.createElement('script');
+    tgsScript.src = 'assets/js/site-data.js';
+    tgsScript.onload = bootLayout;
+    tgsScript.onerror = bootLayout;
+    document.head.appendChild(tgsScript);
   }
 })();
