@@ -566,6 +566,10 @@
   var SVG_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
 
   function render() {
+    /* re-render safe: drop any chrome a previous pass injected */
+    document.querySelectorAll('[data-tg-chrome],.footer,.to-top').forEach(function (n) {
+      n.remove();
+    });
     var top =
       '<div class="topbar"><div class="container"><ul class="topbar__list">' +
       '<li><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>' +
@@ -658,6 +662,7 @@
       '<svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>';
 
     var host = document.createElement('div');
+    host.setAttribute('data-tg-chrome', '');
     host.innerHTML = top + head + drawer;
     document.body.insertBefore(host, document.body.firstChild);
     document.body.insertAdjacentHTML('beforeend', foot + toTop);
@@ -678,36 +683,23 @@
     }
   }
 
-  /* Load both editor-managed files up front - they must be in place BEFORE
-     the header/footer render. A missing file (404) simply falls through to
-     the hard-coded defaults, so nothing breaks without them. */
+  /* Render immediately - site-data.js is a blocking <script> in <head>, so
+     by the time this runs it is fully in place and nothing is worth waiting
+     for. menu-data.js (optional editor overrides) is fetched afterwards;
+     if an override actually arrives the chrome re-renders. A 404 or a hung
+     request can no longer delay the header/footer by even a millisecond. */
   (function () {
-    /* site-data.js may already be on the page (another script pulled it in);
-       only fetch what is actually missing */
-    var srcs = [];
-    if (!window.TGSite) srcs.push('assets/js/site-data.js');
-    if (!window.TGMenu) srcs.push('assets/js/menu-data.js');
-    if (!srcs.length) { applyMenuOverride(); bootLayout(); return; }
+    applyMenuOverride();
+    bootLayout();
 
-    /* fetch them in parallel - two 404s must not take twice as long */
-    var left = srcs.length;
-    var started = false;
-    function done() {
-      if (started || --left > 0) return;
-      started = true;
-      applyMenuOverride();
-      bootLayout();
-    }
-    srcs.forEach(function (src) {
-      var s = document.createElement('script');
-      s.src = src;
-      s.onload = done;
-      s.onerror = done;
-      document.head.appendChild(s);
-    });
-    /* A request that never completes (slow or censored network, hung proxy)
-       must never keep the header/footer from rendering - fall back to the
-       built-in defaults after a short grace period. */
-    setTimeout(done, 1500);
+    var s = document.createElement('script');
+    s.src = 'assets/js/menu-data.js';
+    s.onload = function () {
+      if (window.TGMenu && window.TGMenu.menu) {
+        applyMenuOverride();
+        render();
+      }
+    };
+    document.head.appendChild(s);
   })();
 })();
