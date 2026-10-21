@@ -691,8 +691,10 @@
 
     /* fetch them in parallel - two 404s must not take twice as long */
     var left = srcs.length;
+    var started = false;
     function done() {
-      if (--left > 0) return;
+      if (started || --left > 0) return;
+      started = true;
       applyMenuOverride();
       bootLayout();
     }
@@ -703,5 +705,9 @@
       s.onerror = done;
       document.head.appendChild(s);
     });
+    /* A request that never completes (slow or censored network, hung proxy)
+       must never keep the header/footer from rendering - fall back to the
+       built-in defaults after a short grace period. */
+    setTimeout(done, 1500);
   })();
 })();
