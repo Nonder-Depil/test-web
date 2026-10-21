@@ -39,7 +39,7 @@ window.TGSite = (function () {
     { k: 'Blog', v: t9('Blog', '博客', 'Blog', 'Blog', 'Blog', 'Blog', 'ブログ', '블로그', 'المدونة') },
     { k: 'Contact', v: t9('Contact', '联系我们', 'Contacto', 'Contact', 'Kontakt', 'Contatti', 'お問い合わせ', '문의', 'اتصل بنا') },
     { k: 'Email', v: t9('Email', '邮箱', 'Correo', 'E-mail', 'E-Mail', 'Email', 'メール', '이메일', 'البريد الإلكتروني') },
-    { k: 'Tel / WhatsApp', v: t9('Tel / WhatsApp', '电话', 'Tel / WhatsApp', 'Tél / WhatsApp', 'Tel / WhatsApp', 'Tel / WhatsApp', '電話 / WhatsApp', '전화 / WhatsApp', 'هاتف / واتساب') },
+    { k: 'Tel / WhatsApp', v: t9('Tel / WhatsApp', '电话号码', 'Tel / WhatsApp', 'Tél / WhatsApp', 'Tel / WhatsApp', 'Tel / WhatsApp', '電話 / WhatsApp', '전화 / WhatsApp', 'هاتف / واتساب') },
     { k: 'Fax', v: t9('Fax', '传真', 'Fax', 'Fax', 'Fax', 'Fax', 'ファックス', '팩스', 'فاكس') },
     { k: 'Working hours', v: t9('Working hours', '工作时间', 'Horario', 'Heures d\'ouverture', 'Öffnungszeiten', 'Orari', '営業時間', '근무 시간', 'ساعات العمل') },
     { k: 'All rights reserved.', v: t9('All rights reserved.', '保留所有权利。', 'Todos los derechos reservados.', 'Tous droits réservés.', 'Alle Rechte vorbehalten.', 'Tutti i diritti riservati.', 'すべての権利を保有。', '모든 권리 보유.', 'جميع الحقوق محفوظة.') },
