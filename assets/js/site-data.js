@@ -10,7 +10,7 @@ window.TGSite = (function () {
     email: 'sales@triumphgifts.com',
     tel: '+86-136 5032 5891',
     fax: '+86-20-8092 8520',
-    name: t9('Acme GmbH', '德商会', 'Triumph Gifts', 'Triumph Gifts', 'Triumph Gifts', 'Triumph Gifts', 'Triumph Gifts', 'Triumph Gifts', 'Triumph Gifts'),
+    name: t9('Address', '地址', 'Localidad:', 'Adresse', 'Adresse', 'Dove siamo', '住所', '위치', 'عنوان عقد الأصدقاء الذكي'),
     address: t9('Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China', 'Room 505, TCL Plaza, 18 Haizhou Road, Haizhu District, Guangzhou 510335, China'),
     hours: t9('Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)', 'Mon - Sat, 9:00 - 18:00 (GMT+8)'),
     legal: t9('All rights reserved.', '保留所有权利。', 'Todos los derechos reservados.', 'Tous droits réservés.', 'Alle Rechte vorbehalten.', 'Tutti i diritti riservati.', 'すべての権利を保有。', '모든 권리 보유.', 'جميع الحقوق محفوظة.'),
