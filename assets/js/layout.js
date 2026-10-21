@@ -351,6 +351,46 @@
     }
   };
 
+  /* ---- editor-managed menu (assets/js/menu-data.js) ----
+     The editor's 导航菜单 panel writes that file with 9-language labels.
+     Fold it into MENU before the header renders, so nav + mega dropdowns
+     show the edited text. No file (or menu: null) = built-in defaults. */
+  function applyMenuOverride() {
+    var m = (window.TGMenu && window.TGMenu.menu) || null;
+    if (!m) return;
+
+    function lab(v) {
+      if (v == null) return '';
+      if (typeof v === 'string') return v;
+      return v.en || v.zh || v.es || '';
+    }
+    function head(v) {
+      if (Array.isArray(v)) return [v[0] || '', v[1] || '', v[2] || ''];
+      var e = lab(v);
+      return [e, (v && (v.zh || e)) || '', (v && (v.es || e)) || ''];
+    }
+    Object.keys(m).forEach(function (key) {
+      var raw = m[key];
+      if (!raw) return;
+      var src = Array.isArray(raw) ? raw : [raw];
+      var cols = src.map(function (col) {
+        /* [english label, href, zh, es] - the english label stays first
+           because it doubles as the editor's copy key; zh/es ride along so
+           an edited menu also shows up in those two languages */
+        var items = ((col && col.items) || []).map(function (it) {
+          var a = Array.isArray(it) ? it : [it, ''];
+          var l0 = a[0];
+          var zh = '', es = '';
+          if (l0 && typeof l0 === 'object') { zh = l0.zh || ''; es = l0.es || ''; }
+          return [lab(l0), a[1] || '', zh, es];
+        });
+        return { h: head(col && col.h), items: items };
+      }).filter(function (c) { return c.items.length || c.h[0]; });
+      if (!cols.length) return;
+      MENU[key] = Array.isArray(raw) ? cols : cols[0];
+    });
+  }
+
   /* Desktop mega menu: two-tier for Products (multiple categories),
      simple list for Custom Medal / Company / Services (single category). */
   function megaFor(key) {
@@ -405,7 +445,7 @@
         var title = T(col.h[0], col.h[1], col.h[2]);
         var list = '';
         col.items.forEach(function (it) {
-          list += '<li><a href="' + it[1] + '"' + dk(it[0]) + '>' + T(it[0], it[0], it[0]) + '</a></li>';
+          list += '<li><a href="' + it[1] + '"' + dk(it[0]) + '>' + T(it[0], it[2] || it[0], it[3] || it[0]) + '</a></li>';
         });
         cats += '<li class="mega__cat' + (i === 0 ? ' is-active' : '') + '" data-cat="' + i + '"' + dk(col.h[0]) + '>' + title + '</li>';
         panes += '<div class="mega__pane' + (i === 0 ? ' is-active' : '') + '" data-pane="' + i + '">' +
@@ -425,7 +465,7 @@
     var title = T(col.h[0], col.h[1], col.h[2]);
     var list = '';
     col.items.forEach(function (it) {
-      list += '<li><a href="' + it[1] + '"' + dk(it[0]) + '>' + T(it[0], it[0], it[0]) + '</a></li>';
+      list += '<li><a href="' + it[1] + '"' + dk(it[0]) + '>' + T(it[0], it[2] || it[0], it[3] || it[0]) + '</a></li>';
     });
     return '<div class="mega mega--simple">' +
       '<div class="mega__simple-head"' + dk(col.h[0]) + '>' + title + '</div>' +
@@ -483,12 +523,12 @@
             html += '<div class="drawer__cat-group">' +
               '<button class="drawer__cat" type="button">' + T(col.h[0], col.h[1], col.h[2]) + CHEV + '</button>' +
               '<div class="drawer__cat-items">';
-            col.items.forEach(function (it) { html += '<a href="' + it[1] + '">' + T(it[0], it[0], it[0]) + '</a>'; });
+            col.items.forEach(function (it) { html += '<a href="' + it[1] + '">' + T(it[0], it[2] || it[0], it[3] || it[0]) + '</a>'; });
             html += '</div></div>';
           });
         } else {
           html += '<div class="drawer__cat-items drawer__cat-items--flat">';
-          pool[0].items.forEach(function (it) { html += '<a href="' + it[1] + '">' + T(it[0], it[0], it[0]) + '</a>'; });
+          pool[0].items.forEach(function (it) { html += '<a href="' + it[1] + '">' + T(it[0], it[2] || it[0], it[3] || it[0]) + '</a>'; });
           html += '</div>';
         }
         html += '</div>';
@@ -638,16 +678,30 @@
     }
   }
 
-  /* The editor's company data must be in place BEFORE the footer renders.
-     Load it up front; a missing file (404) simply falls through to the
-     hard-coded defaults, so nothing breaks without it. */
-  if (window.TGSite) {
-    bootLayout();
-  } else {
-    var tgsScript = document.createElement('script');
-    tgsScript.src = 'assets/js/site-data.js';
-    tgsScript.onload = bootLayout;
-    tgsScript.onerror = bootLayout;
-    document.head.appendChild(tgsScript);
-  }
+  /* Load both editor-managed files up front - they must be in place BEFORE
+     the header/footer render. A missing file (404) simply falls through to
+     the hard-coded defaults, so nothing breaks without them. */
+  (function () {
+    /* site-data.js may already be on the page (another script pulled it in);
+       only fetch what is actually missing */
+    var srcs = [];
+    if (!window.TGSite) srcs.push('assets/js/site-data.js');
+    if (!window.TGMenu) srcs.push('assets/js/menu-data.js');
+    if (!srcs.length) { applyMenuOverride(); bootLayout(); return; }
+
+    /* fetch them in parallel - two 404s must not take twice as long */
+    var left = srcs.length;
+    function done() {
+      if (--left > 0) return;
+      applyMenuOverride();
+      bootLayout();
+    }
+    srcs.forEach(function (src) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = done;
+      s.onerror = done;
+      document.head.appendChild(s);
+    });
+  })();
 })();
