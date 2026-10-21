@@ -683,23 +683,41 @@
     }
   }
 
-  /* Render immediately - site-data.js is a blocking <script> in <head>, so
-     by the time this runs it is fully in place and nothing is worth waiting
-     for. menu-data.js (optional editor overrides) is fetched afterwards;
-     if an override actually arrives the chrome re-renders. A 404 or a hung
-     request can no longer delay the header/footer by even a millisecond. */
+  /* Render immediately - the chrome must never wait on the network.
+     site-data.js is NOT a static <script> on every page (only the editor's
+     preview injects it), so anything missing is fetched right after the
+     first paint and the chrome re-renders once it lands. render() is
+     re-entrant: the second pass replaces the first instead of duplicating
+     it, and when nothing actually changed the extra pass is skipped. */
   (function () {
     applyMenuOverride();
     bootLayout();
 
-    var s = document.createElement('script');
-    s.src = 'assets/js/menu-data.js';
-    s.onload = function () {
-      if (window.TGMenu && window.TGMenu.menu) {
-        applyMenuOverride();
-        render();
-      }
-    };
-    document.head.appendChild(s);
+    var pend = [];
+    if (!window.TGSite) pend.push('assets/js/site-data.js');
+    if (!window.TGMenu) pend.push('assets/js/menu-data.js');
+    if (!pend.length) return;
+
+    var done = false, hadSite = !!window.TGSite;
+    function finish() {
+      /* re-render only when the data actually changed underneath us;
+         a 404 (menu-data.js) or a duplicate event costs nothing */
+      var now = !!window.TGSite;
+      if (done && now === hadSite) return;
+      done = true;
+      hadSite = now;
+      applyMenuOverride();
+      render();
+    }
+    pend.forEach(function (src) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = finish;
+      s.onerror = finish;
+      document.head.appendChild(s);
+    });
+    /* A request that never settles (slow or censored network, hung proxy)
+       must not strand the page: whatever arrived by now is used as-is. */
+    setTimeout(finish, 1500);
   })();
 })();
